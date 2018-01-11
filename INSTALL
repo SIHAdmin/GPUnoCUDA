@@ -1,0 +1,22 @@
+To install this program:
+-----------------------
+
+1. Make sure you have GNU Scientific Library installed.
+   Easiest is via homebrew:
+
+   $ brew install gsl
+
+2. Make and Make clean
+
+   $ make && make clean
+
+The make clean command will leave the binary file in a ./bin subdirectory.
+
+
+To run, simply
+-------------
+
+  $ ./bin/MeanShiftGPU [seed]
+
+where seed is an optional integer argument, specifying the random seed used to generate input data.
+
