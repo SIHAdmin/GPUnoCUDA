@@ -32,7 +32,7 @@ or set up as you prefer.
 
 ### Building
 
-Git clone, and build the applicaton via:
+Git clone. In the ```MeanShiftGPU``` folder, build the applicaton via:
 
 ```
 make && make clean
