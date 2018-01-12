@@ -12,7 +12,7 @@ Intall via your OS's package manager on Linux, or via the [homebrew](https://bre
 ```
 brew install gsl
 ```
-If you don't have Homebrew, you can install by
+If you don't have Homebrew, you can install it by
 
 ```
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
