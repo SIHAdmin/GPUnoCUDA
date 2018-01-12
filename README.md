@@ -38,6 +38,8 @@ Git clone. In the ```MeanShiftGPU``` folder, build the applicaton via:
 make && make clean
 ```
 
+You may get a couple of warnings, but hopefully no errors!
+
 The ```clean``` call will move the binary and OpenCL headers to the ```./bin``` subfolder.
 
 ## Usage
