@@ -7,7 +7,7 @@ This C and OpenCL code demonstrates GPU speedup when performing a MeanShift Clus
 ### Dependencies 
 
 MeanShiftGPU depends on [gsl](https://www.gnu.org/software/gsl/) (GNU Scientific Library).
-Intall via your OS's package manager on Linux, or via the [homebrew]() package manager for OSX:
+Intall via your OS's package manager on Linux, or via the [homebrew](https://brew.sh/) package manager for OSX:
 
 ```
 brew install gsl
