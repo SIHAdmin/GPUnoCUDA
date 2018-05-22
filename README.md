@@ -45,7 +45,7 @@ The ```clean``` call will move the binary and OpenCL headers to the ```./bin``` 
 ## Usage
 
 ```
-./bin/MeanSHiftGPU [seed]
+./bin/MeanShiftGPU [seed]
 ```
 
 where *seed* is the integer seed used by the random number generator.
