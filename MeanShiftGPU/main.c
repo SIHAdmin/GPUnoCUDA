@@ -86,13 +86,13 @@ float max_array( float arr[], int len )
 
 // d. Unique elements function.. because C is a terrible langauge to write maths in!
 float *unique_elements(float arr[], int len, int *ulen) {
-    
+
     float counted[len];
     int j, n, count, flag;
-    
+
     counted[0] = arr[0];
     count = 1;/*one element is counted*/
-    
+
     for(j=0; j <= len-1; ++j) {
         flag = 1;;
         /*the counted array will always have 'count' elements*/
@@ -137,7 +137,7 @@ int main (int argc, const char *argv[]) {
         printf("ERROR> Too many arguments supplied.\n");
         return 1;
     }
-    
+
     // --> This is to measure elapsed wall time
     struct timespec now, tmstart;
 
@@ -151,8 +151,8 @@ int main (int argc, const char *argv[]) {
         fprintf(stdout, "WARNING> GNUplot not found; will not plot results.\n\n");
         DO_PLOTS = 0;
     }
-    
-    
+
+
 // Initialise OpenCL environment
 // -----------------------------
     // --> Query openCL devices
@@ -163,7 +163,7 @@ int main (int argc, const char *argv[]) {
     clGetContextInfo(
                      context, CL_CONTEXT_DEVICES, sizeof(devices), devices, &length);
     fprintf(stdout, "The following devices are available for use:\n");
-    
+
     // print device info
     int num_devices = (int)(length / sizeof(cl_device_id));
     int i;
@@ -171,7 +171,7 @@ int main (int argc, const char *argv[]) {
         fprintf(stdout, "%d) ", i);
         print_device_info(devices[i]);
     }
-    
+
     // --> Which OpenCL device to use?
     int devID = -1;
     while ( devID < 0 || devID > num_devices ) {
@@ -193,7 +193,7 @@ int main (int argc, const char *argv[]) {
     // Instead, we will create a queue on the device selected above, which may also be the CPU
     gcl_create_dispatch_queue(CL_DEVICE_TYPE_USE_ID, devices[devID]);
 #endif
-    
+
     if (queue == NULL) {
         queue = gcl_create_dispatch_queue(CL_DEVICE_TYPE_CPU, NULL);;
         fprintf(stderr, "Warning: Running on CPU\n");
@@ -207,24 +207,24 @@ int main (int argc, const char *argv[]) {
 // -----------------------------
 
 
-    
+
 // Generate input data
 // -------------------
     // Set the size of the sample
     const int NUM_VALUES = 128 * 160 / 4;
     const int BUFFER_SIZE = sizeof(cl_float2) * NUM_VALUES;
-    
+
     // also set the maxmimum number of mean-shift iterations
     const int MAX_ITERATIONS = 100;
-    
+
     // --> Allocate Host memory (normal addressable array allocations)
     // cl_float2 is an OpenCL defined datatype which is a tuple (x,y); makes the code a little neater!
     cl_float2 *points = (cl_float2 *)malloc(BUFFER_SIZE);
     cl_float2 *original_points = (cl_float2 *)malloc(BUFFER_SIZE);
     cl_float2 *shifted_points = (cl_float2 *)malloc(BUFFER_SIZE);
     float *modes = (float *)malloc(BUFFER_SIZE/2);
-    
-    
+
+
     // Data will be sampled from a number of gaussian distributions, generating the clusters:
     // --> Set random seed
     time_t t_seed;
@@ -236,10 +236,10 @@ int main (int argc, const char *argv[]) {
     }
     printf("\nRandom seed %ld\n", t_seed);
     srand((unsigned int) t_seed); // demo: 1515482054,1513833180, 1513834108, 1515629158
-    
+
     // --> Choose number of clusters between [2,5]
     int Nc = 2 + rand() % 4;
-    
+
     // --> Generate distribution sigmas between [1,3], and centres, independently for the x and y dimensions
     float sig[2][Nc];
     float mu[2][Nc];
@@ -249,7 +249,7 @@ int main (int argc, const char *argv[]) {
         mu[0][i] = (rand() % 100) / 10;
         mu[1][i] = (rand() % 100) / 10;
     }
-    
+
     // --> Use Gaussian sampler from the GNU scientific library (gsl) to sample for the clusters
     // (which uses the gsl random number generator)
     gsl_rng *r;
@@ -261,24 +261,25 @@ int main (int argc, const char *argv[]) {
         points[i].x = (cl_float) mu[0][j] + gsl_ran_gaussian(r, sig[0][j]);
         points[i].y = (cl_float) mu[1][j] + gsl_ran_gaussian(r, sig[1][j]);
     }
-    
+
     // --> Set the convolution bandwidth
     // reshape the sigmas vector so I can find the min and max of them..
     float (*resig)[1] = (float (*)[1])sig;
-    cl_float BANDWIDTH = 0.20* (max_array( *resig , 2*Nc) + min_array( *resig , 2*Nc));
+    // cl_float BANDWIDTH = 0.20* (max_array( *resig , 2*Nc) + min_array( *resig , 2*Nc));
+    cl_float BANDWIDTH = 2.5* min_array( *resig , 2*Nc);
     fprintf(stdout, "Bandwidth is %f.\n",BANDWIDTH);
-    
+
     // free the gsl random object
     gsl_rng_free(r);
-    
+
     // --> Write input data to file
     FILE *temp = fopen("data.temp", "w");
     for (int i=0; i<NUM_VALUES; i++) {
         fprintf(temp, "%lf %lf %d\n", points[i].x, points[i].y, i%Nc + 1);
     }
     fclose(temp);
-    
-    
+
+
     if (DO_PLOTS == 1) {
     // Plot data via GNUplot
     FILE *gnuplotPipe = popen("gnuplot -persistent", "w");
@@ -290,8 +291,8 @@ int main (int argc, const char *argv[]) {
     fflush(gnuplotPipe);
     }
 // ----------------
-    
-    
+
+
 // Mean-shift algorithm in OpenCL
 // ------------------------------
     // --> First make a copy of the dample data
@@ -321,7 +322,7 @@ int main (int argc, const char *argv[]) {
                                                 CL_KERNEL_WORK_GROUP_SIZE,  // we'll then pass this to the cl_ndrange object below.
                                                 sizeof(work_group_size),
                                                 &work_group_size, NULL);
-            
+
             // --> This is the N-dimensional range over which to execute the Kernel (can be [1:3])
             cl_ndrange range = {
                 1,                              // Since our data buffers are 1D, we weill use a 1D range
@@ -329,7 +330,7 @@ int main (int argc, const char *argv[]) {
                 { NUM_VALUES, 0, 0 },           // "global size": the total number of items to process in each dim
                 { work_group_size, 0, 0 }       // "local size" of workgroups: which is the number of items each workgroup will process. This determines
             };                                  // This determines the number of workgroups also, since workgroups = global size / local size, as below:
-            
+
             num_work_groups = NUM_VALUES / work_group_size;
 
             mean_shift_point_kernel(&range, (cl_float2 *)device_points,     // This is the actual computation, as defined by our Kernel function!
@@ -366,7 +367,7 @@ int main (int argc, const char *argv[]) {
     current_utc_time(&now);
     double seconds = (double)((now.tv_sec+now.tv_nsec*1e-9) - (double)(tmstart.tv_sec+tmstart.tv_nsec*1e-9));
     printf("Wall time %fs\n", seconds);
-    
+
 // --> Free device memory
     gcl_free(device_points);
     gcl_free(device_original_points);
@@ -413,7 +414,7 @@ int main (int argc, const char *argv[]) {
         }
     }
     free(modexy); // since it was allocated 'in stack'
-    
+
     // --> Find clusters of at least minimum size = .75 of actual population
     // and assign them an index (> big_index), which will also be used for false-colouring the GNU-plots
     fprintf(stdout, "\n");
@@ -431,7 +432,7 @@ int main (int argc, const char *argv[]) {
         // Print out the cluster IDs and populations
         fprintf(stdout, "clustdx[%d] = %f. (pop=%d)\n", i, clustdx[i], pops[i]);
     }
-    
+
     // --> Re-label according to accepted clusters above (> cluster2)
     float *cluster2 = (float *)malloc(sizeof(float)*NUM_VALUES);
     for (int k=0; k<NUM_VALUES; k++) {
@@ -454,8 +455,8 @@ int main (int argc, const char *argv[]) {
     fclose(gnuplotPipe);
     }
 // ----------------
-    
-    
+
+
 // Release host mem
     free(points);
     free(original_points);
