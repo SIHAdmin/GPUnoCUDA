@@ -40,7 +40,7 @@ make && make clean
 
 You may get a couple of warnings, but hopefully no errors!
 
-The ```clean``` call will move the binary and OpenCL headers to the ```./bin``` subfolder.
+**The ```clean``` call will move the binary and OpenCL headers to the ```./bin``` subfolder.**
 
 ## Usage
 
